@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Delivery Dashboard — FoodDash</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { background: #f0f2f5; font-family: 'Poppins', sans-serif; }
+    .dash-layout { max-width: 900px; margin: 0 auto; padding: 24px; }
+    /* Profile Header */
+    .rider-header { background: linear-gradient(135deg, var(--dark), var(--dark2)); color: white; border-radius: 20px; padding: 28px; display: flex; gap: 20px; align-items: center; margin-bottom: 24px; }
+    .rider-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg,var(--primary),var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+    .rider-info h2 { font-size: 20px; font-weight: 800; }
+    .rider-info p  { opacity: 0.7; font-size: 13px; margin-top: 2px; }
+    .rider-stats { margin-left: auto; display: flex; gap: 24px; }
+    .rider-stat { text-align: center; }
+    .rider-stat-val { font-size: 22px; font-weight: 800; }
+    .rider-stat-label { font-size: 11px; opacity: 0.6; }
+    .availability-toggle { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+    .toggle-pill { width: 52px; height: 28px; border-radius: 14px; background: #555; cursor: pointer; transition: all 0.3s; position: relative; }
+    .toggle-pill.on { background: var(--accent); }
+    .toggle-pill::after { content: ''; width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: all 0.3s; }
+    .toggle-pill.on::after { left: 27px; }
+    /* Stats Cards */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-mini { background: white; border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow); text-align: center; }
+    .stat-mini-icon { font-size: 28px; margin-bottom: 6px; }
+    .stat-mini-val { font-size: 20px; font-weight: 800; }
+    .stat-mini-label { font-size: 11px; color: var(--text-light); }
+    /* Active Delivery */
+    .active-delivery { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 24px; overflow: hidden; }
+    .active-delivery-banner { background: linear-gradient(135deg, var(--primary), #ff6b35); color: white; padding: 16px 20px; display: flex; align-items: center; gap: 10px; }
+    .active-delivery-banner h3 { font-size: 16px; font-weight: 700; }
+    .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: white; animation: pulse 1s infinite; }
+    .delivery-body { padding: 20px; }
+    .route-display { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; background: #f8f9fc; border-radius: 12px; padding: 14px; }
+    .route-step { flex: 1; }
+    .route-step-label { font-size: 11px; color: var(--text-light); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+    .route-step-val { font-size: 14px; font-weight: 700; }
+    .route-arrow { font-size: 24px; color: var(--primary); }
+    .customer-info-card { display: flex; gap: 14px; align-items: center; padding: 14px; border: 2px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+    .customer-info-card .ci-icon { font-size: 32px; }
+    .ci-body h4 { font-size: 14px; font-weight: 700; }
+    .ci-body p  { font-size: 12px; color: var(--text-light); }
+    .ci-actions { margin-left: auto; display: flex; gap: 8px; }
+    .ci-btn { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border); background: white; cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+    .ci-btn:hover { border-color: var(--primary); }
+    /* Status Buttons */
+    .status-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .status-action-btn { flex: 1; padding: 12px; border-radius: 50px; border: none; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; min-width: 140px; }
+    .btn-pickup  { background: linear-gradient(135deg,#667eea,#764ba2); color: white; }
+    .btn-otw     { background: linear-gradient(135deg,var(--secondary),#ff6b35); color: white; }
+    .btn-deliver { background: linear-gradient(135deg,var(--accent),#27ae60); color: white; }
+    .status-action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+    /* Orders list */
+    .panel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+    .panel-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+    .delivery-history-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .delivery-history-item:last-child { border-bottom: none; }
+    .dh-icon { font-size: 28px; }
+    .dh-info { flex: 1; }
+    .dh-info h4 { font-size: 14px; font-weight: 700; }
+    .dh-info p  { font-size: 12px; color: var(--text-light); }
+    .dh-earn { font-size: 16px; font-weight: 800; color: var(--accent); }
+    @media(max-width:600px){ .stats-row{grid-template-columns:1fr 1fr;} .rider-stats{display:none;} }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <!-- Rider Header -->
+    <div class="rider-header">
+      <div class="rider-avatar">🛵</div>
+      <div class="rider-info">
+        <h2>Rahul Kumar</h2>
+        <p>⭐ 4.8 · Delivery Partner · Mumbai Zone</p>
+        <div class="availability-toggle">
+          <div class="toggle-pill on" id="availToggle" onclick="toggleAvail(this)"></div>
+          <span id="availLabel" style="font-size:13px;font-weight:600">Online — Ready for orders</span>
+        </div>
+      </div>
+      <div class="rider-stats">
+        <div class="rider-stat"><div class="rider-stat-val">8</div><div class="rider-stat-label">Today</div></div>
+        <div class="rider-stat"><div class="rider-stat-val">₹640</div><div class="rider-stat-label">Earned</div></div>
+        <div class="rider-stat"><div class="rider-stat-val">4.8⭐</div><div class="rider-stat-label">Rating</div></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-mini-icon">📦</div><div class="stat-mini-val">8</div><div class="stat-mini-label">Today's Deliveries</div></div>
+      <div class="stat-mini"><div class="stat-mini-icon">💰</div><div class="stat-mini-val">₹640</div><div class="stat-mini-label">Today's Earnings</div></div>
+      <div class="stat-mini"><div class="stat-mini-icon">🏆</div><div class="stat-mini-val">1,240</div><div class="stat-mini-label">Total Deliveries</div></div>
+      <div class="stat-mini"><div class="stat-mini-icon">⏱️</div><div class="stat-mini-val">24m</div><div class="stat-mini-label">Avg Time</div></div>
+    </div>
+
+    <!-- Active Delivery -->
+    <div class="active-delivery">
+      <div class="active-delivery-banner">
+        <div class="pulse-dot"></div>
+        <h3>Active Delivery — Order #FD7829</h3>
+      </div>
+      <div class="delivery-body">
+        <div class="route-display">
+          <div class="route-step">
+            <div class="route-step-label">📍 Pickup</div>
+            <div class="route-step-val">Pizza Palace, Sector 12</div>
+          </div>
+          <div class="route-arrow">→</div>
+          <div class="route-step">
+            <div class="route-step-label">🏠 Deliver</div>
+            <div class="route-step-val">123 Main St, Sector 8</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:800;color:var(--primary)">2.4 km</div>
+            <div style="font-size:12px;color:var(--text-light)">~12 min</div>
+          </div>
+        </div>
+
+        <div class="customer-info-card">
+          <div class="ci-icon">👤</div>
+          <div class="ci-body">
+            <h4>Amit Kumar</h4>
+            <p>📞 +91 98765 43210</p>
+            <p>📍 Flat 4B, Tower 2, Sector 8</p>
+          </div>
+          <div class="ci-actions">
+            <button class="ci-btn" onclick="Toast.show('📞 Calling customer...','info')">📞</button>
+            <button class="ci-btn" onclick="Toast.show('💬 Message sent!','success')">💬</button>
+          </div>
+        </div>
+
+        <div style="background:#f8f9fc;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
+          <strong>🧾 Order:</strong> Margherita Pizza ×2, Garlic Bread ×1 · <strong>₹697</strong> · Paid via UPI
+        </div>
+
+        <div class="status-btns">
+          <button class="status-action-btn btn-pickup" onclick="updateDeliveryStatus('Picked Up', this)">📦 Picked Up from Restaurant</button>
+          <button class="status-action-btn btn-otw" onclick="updateDeliveryStatus('On The Way', this)">🛵 On The Way</button>
+          <button class="status-action-btn btn-deliver" onclick="updateDeliveryStatus('Delivered', this)">✅ Mark as Delivered</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery History -->
+    <div class="panel">
+      <div class="panel-title">📋 Today's Deliveries</div>
+      <div id="deliveryHistory"></div>
+    </div>
+  </div>
+
+  <script src="../data/restaurants.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const HISTORY = [
+      { orderId: 'FD7821', customer: 'Priya Sharma', restaurant: 'Burger Barn',    amount: 348, earn: 80, time: '10:30 AM', dist: '1.8 km' },
+      { orderId: 'FD7815', customer: 'Rohan Verma',   restaurant: 'Biryani Bazaar', amount: 698, earn: 90, time: '09:45 AM', dist: '3.2 km' },
+      { orderId: 'FD7810', customer: 'Sneha Patel',   restaurant: 'Sushi Central',  amount: 899, earn: 100, time: '09:00 AM', dist: '2.5 km' }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('deliveryHistory').innerHTML = HISTORY.map(h => `
+        <div class="delivery-history-item">
+          <div class="dh-icon">✅</div>
+          <div class="dh-info">
+            <h4>${h.restaurant} → ${h.customer}</h4>
+            <p>#${h.orderId} · ${h.time} · ${h.dist}</p>
+          </div>
+          <div class="dh-earn">+₹${h.earn}</div>
+        </div>`).join('');
+    });
+
+    function toggleAvail(el) {
+      el.classList.toggle('on');
+      const on = el.classList.contains('on');
+      document.getElementById('availLabel').textContent = on ? 'Online — Ready for orders' : 'Offline — Not accepting orders';
+      Toast.show(on ? '🟢 You are now Online!' : '🔴 You are now Offline', on ? 'success' : 'info');
+    }
+
+    function updateDeliveryStatus(status, btn) {
+      Toast.show(`✅ Status updated: ${status}`, 'success');
+      if (status === 'Delivered') {
+        setTimeout(() => {
+          document.querySelector('.active-delivery-banner').style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+          document.querySelector('.active-delivery-banner h3').textContent = '✅ Delivery Completed!';
+        }, 500);
+      }
+    }
+  </script>
+</body>
+</html>
