@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — FoodDash</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { background: #f0f2f5; font-family: 'Poppins', sans-serif; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    /* Sidebar */
+    .admin-sidebar { width: 240px; background: #1a1a2e; color: white; flex-shrink: 0; position: fixed; height: 100vh; overflow-y: auto; }
+    .admin-logo { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .admin-logo h2 { font-size: 18px; font-weight: 800; }
+    .admin-logo p  { font-size: 11px; opacity: 0.5; margin-top: 2px; }
+    .admin-nav { padding: 16px 0; }
+    .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; font-weight: 500; cursor: pointer; color: rgba(255,255,255,0.6); transition: all 0.2s; border-left: 3px solid transparent; }
+    .admin-nav-item:hover, .admin-nav-item.active { color: white; background: rgba(255,255,255,0.08); border-left-color: var(--primary); }
+    .admin-nav-item i { width: 18px; }
+    /* Main */
+    .admin-main { margin-left: 240px; flex: 1; padding: 24px; }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .admin-header h1 { font-size: 22px; font-weight: 800; }
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .kpi-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px; }
+    .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .kpi-icon.orange  { background: #fff3e0; }
+    .kpi-icon.blue    { background: #e3f2fd; }
+    .kpi-icon.green   { background: #e8f5e9; }
+    .kpi-icon.purple  { background: #f3e5f5; }
+    .kpi-icon.red     { background: #ffebee; }
+    .kpi-body h3 { font-size: 24px; font-weight: 800; }
+    .kpi-body p  { font-size: 12px; color: var(--text-light); }
+    .kpi-body .trend { font-size: 11px; font-weight: 700; margin-top: 3px; }
+    /* Panel */
+    .panel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; }
+    .panel-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+    /* Table */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); padding: 0 12px 12px; border-bottom: 2px solid var(--border); }
+    .admin-table td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #f8f9fc; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,var(--primary),var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: 700; }
+    .action-icon { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .action-icon:hover { transform: scale(1.1); }
+    /* Chart */
+    .chart-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .chart-bar-label { width: 100px; font-size: 13px; color: var(--text-light); flex-shrink: 0; text-align: right; }
+    .chart-bar-track { flex: 1; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+    .chart-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(135deg,var(--primary),var(--secondary)); transition: width 1s ease; }
+    .chart-bar-val { width: 60px; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    @media(max-width:768px){ .admin-sidebar{display:none;} .admin-main{margin-left:0;} }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        <h2>⚙️ FoodDash</h2>
+        <p>Admin Control Panel</p>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-item active" onclick="showPanel('dashboard',this)"><i class="fas fa-tachometer-alt"></i> Dashboard</div>
+        <div class="admin-nav-item" onclick="showPanel('users',this)"><i class="fas fa-users"></i> Users</div>
+        <div class="admin-nav-item" onclick="showPanel('restaurants',this)"><i class="fas fa-store"></i> Restaurants</div>
+        <div class="admin-nav-item" onclick="showPanel('orders',this)"><i class="fas fa-receipt"></i> Orders</div>
+        <div class="admin-nav-item" onclick="showPanel('riders',this)"><i class="fas fa-motorcycle"></i> Delivery Partners</div>
+        <div class="admin-nav-item" onclick="showPanel('analytics',this)"><i class="fas fa-chart-line"></i> Analytics</div>
+        <div class="admin-nav-item" onclick="window.location.href='statistics.html'"><i class="fas fa-chart-bar"></i> Platform Stats</div>
+        <div class="admin-nav-item" onclick="window.location.href='../index.html'"><i class="fas fa-home"></i> View Site</div>
+        <div class="admin-nav-item" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1 id="adminPanelTitle">📊 Dashboard Overview</h1>
+        <div style="font-size:13px;color:var(--text-light)">Welcome, Admin · <span id="adminTime"></span></div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-icon orange">👥</div><div class="kpi-body"><h3>52,840</h3><p>Total Users</p><div class="trend" style="color:var(--accent)">↑ +1,240 this week</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon blue">🏪</div><div class="kpi-body"><h3>218</h3><p>Restaurants</p><div class="trend" style="color:var(--accent)">↑ +12 this month</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon green">📦</div><div class="kpi-body"><h3>1,842</h3><p>Orders Today</p><div class="trend" style="color:var(--accent)">↑ 8% vs yesterday</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon purple">💰</div><div class="kpi-body"><h3>₹8.4L</h3><p>Today's GMV</p><div class="trend" style="color:var(--accent)">↑ 15% this week</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon red">🛵</div><div class="kpi-body"><h3>340</h3><p>Active Riders</p><div class="trend" style="color:#f39c12">→ Stable</div></div></div>
+      </div>
+
+      <!-- Dashboard Panel -->
+      <div id="panel-dashboard">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div class="panel">
+            <div class="panel-title">📈 Revenue by Cuisine</div>
+            ${[
+              ['Biryani',  78, '₹2.1L'],
+              ['Pizza',    65, '₹1.8L'],
+              ['Burgers',  55, '₹1.4L'],
+              ['Sushi',    45, '₹1.1L'],
+              ['Chinese',  35, '₹0.9L'],
+              ['Mexican',  28, '₹0.7L']
+            ].map(([label,pct,val]) => `
+              <div class="chart-bar-row">
+                <div class="chart-bar-label">${label}</div>
+                <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%"></div></div>
+                <div class="chart-bar-val">${val}</div>
+              </div>`).join('')}
+          </div>
+          <div class="panel">
+            <div class="panel-title">⚡ Recent Activity</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              ${[
+                ['🆕','New user registered','Priya S.','2 min ago'],
+                ['📦','Order placed','₹699','5 min ago'],
+                ['🏪','New restaurant onboarded','Tandoor Palace','12 min ago'],
+                ['❌','Order cancelled','FD7821','18 min ago'],
+                ['⭐','5-star review received','Pizza Palace','25 min ago'],
+                ['💰','Payout processed','₹12,400','1 hr ago']
+              ].map(([icon,action,detail,time]) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fc;border-radius:8px">
+                  <span style="font-size:20px">${icon}</span>
+                  <div style="flex:1"><div style="font-size:13px;font-weight:600">${action}</div><div style="font-size:12px;color:var(--text-light)">${detail}</div></div>
+                  <div style="font-size:11px;color:var(--text-light)">${time}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Panel -->
+      <div id="panel-users" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Users Management <span style="font-size:13px;color:var(--text-light);font-weight:400">52,840 total</span></div>
+          <div style="overflow-x:auto">
+            <table class="admin-table">
+              <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${[
+                  ['A','Amit Kumar',  'amit@example.com',  '+91 98765','28','₹14,200','Jan 2026','active'],
+                  ['P','Priya Sharma','priya@example.com', '+91 87654','15','₹8,900', 'Mar 2026','active'],
+                  ['R','Rohan Verma', 'rohan@example.com', '+91 76543','42','₹21,600','Nov 2025','active'],
+                  ['S','Sneha Patel', 'sneha@example.com', '+91 65432','7', '₹3,400', 'Jul 2026','suspended']
+                ].map(([init,name,email,phone,orders,spent,joined,status]) => `
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:10px"><div class="user-avatar">${init}</div><strong>${name}</strong></div></td>
+                    <td style="color:var(--text-light)">${email}</td>
+                    <td style="color:var(--text-light)">${phone}</td>
+                    <td><strong>${orders}</strong></td>
+                    <td><strong>${spent}</strong></td>
+                    <td style="color:var(--text-light)">${joined}</td>
+                    <td><span class="badge ${status==='active'?'badge-green':'badge-red'}">${status}</span></td>
+                    <td>
+                      <button class="action-icon" style="background:#e8f4fd" onclick="Toast.show('User details','info')">👁️</button>
+                      <button class="action-icon" style="background:#ffeaea" onclick="Toast.show('User action applied','success')">⚡</button>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restaurants Panel -->
+      <div id="panel-restaurants" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Restaurants Management <span style="font-size:13px;color:var(--text-light);font-weight:400">218 total</span></div>
+          <div style="overflow-x:auto">
+            <table class="admin-table">
+              <thead><tr><th>Restaurant</th><th>Cuisine</th><th>Rating</th><th>Orders</th><th>Revenue</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="restTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Panel -->
+      <div id="panel-orders" style="display:none">
+        <div class="panel">
+          <div class="panel-title">All Orders <span style="font-size:13px;color:var(--text-light);font-weight:400">1,842 today</span></div>
+          <div style="overflow-x:auto">
+            <table class="admin-table">
+              <thead><tr><th>Order ID</th><th>Customer</th><th>Restaurant</th><th>Amount</th><th>Status</th><th>Time</th><th>Action</th></tr></thead>
+              <tbody>
+                ${[
+                  ['FD9001','Amit Kumar',  'Pizza Palace',   '₹748','delivered','2:30 PM'],
+                  ['FD9002','Priya Sharma','Biryani Bazaar', '₹428','preparing', '2:45 PM'],
+                  ['FD9003','Rohan Verma', 'Burger Barn',    '₹348','confirmed', '2:50 PM'],
+                  ['FD9004','Sneha Patel', 'Sushi Central',  '₹899','on-the-way','2:55 PM'],
+                  ['FD9005','Karan Mehta', 'Taco Fiesta',    '₹578','cancelled', '3:00 PM']
+                ].map(([id,cust,rest,amt,status,time]) => `
+                  <tr>
+                    <td><strong>#${id}</strong></td>
+                    <td>${cust}</td>
+                    <td>${rest}</td>
+                    <td><strong>${amt}</strong></td>
+                    <td><span class="badge ${{'delivered':'badge-green','cancelled':'badge-red','confirmed':'badge-yellow','preparing':'badge-blue','on-the-way':'badge-blue'}[status]}">${status}</span></td>
+                    <td style="color:var(--text-light)">${time}</td>
+                    <td><button class="action-icon" style="background:#e8f4fd" onclick="Toast.show('Order #${id} details','info')">👁️</button></td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Riders Panel -->
+      <div id="panel-riders" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Delivery Partners <span style="font-size:13px;color:var(--text-light);font-weight:400">340 active</span></div>
+          <div style="overflow-x:auto">
+            <table class="admin-table">
+              <thead><tr><th>Rider</th><th>Zone</th><th>Status</th><th>Today</th><th>Rating</th><th>Earnings</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${[
+                  ['Rahul Kumar', 'North Delhi','online', '8 deliveries','4.8⭐','₹640'],
+                  ['Arjun Sharma','South Delhi','busy',   '5 deliveries','4.7⭐','₹400'],
+                  ['Deepak Singh','East Delhi', 'online', '12 deliveries','4.9⭐','₹960'],
+                  ['Mohan Das',   'West Delhi', 'offline','3 deliveries', '4.5⭐','₹240']
+                ].map(([name,zone,status,today,rating,earn]) => `
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">🛵</span><strong>${name}</strong></div></td>
+                    <td style="color:var(--text-light)">${zone}</td>
+                    <td><span class="badge ${{online:'badge-green',busy:'badge-yellow',offline:'badge-red'}[status]}">${status}</span></td>
+                    <td>${today}</td>
+                    <td>${rating}</td>
+                    <td style="color:var(--accent);font-weight:700">${earn}</td>
+                    <td><button class="action-icon" style="background:#e8f4fd" onclick="Toast.show('Rider details','info')">👁️</button></td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Panel -->
+      <div id="panel-analytics" style="display:none">
+        <div class="panel">
+          <div class="panel-title">📈 Platform Analytics</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+            <div style="text-align:center;padding:20px;background:#f8f9fc;border-radius:12px">
+              <div style="font-size:36px;font-weight:800;color:var(--primary)">₹42L</div>
+              <div style="color:var(--text-light);font-size:14px">Monthly GMV</div>
+              <div style="color:var(--accent);font-size:12px;font-weight:700;margin-top:4px">↑ 23% MoM</div>
+            </div>
+            <div style="text-align:center;padding:20px;background:#f8f9fc;border-radius:12px">
+              <div style="font-size:36px;font-weight:800;color:var(--secondary)">4.7</div>
+              <div style="color:var(--text-light);font-size:14px">Avg Platform Rating</div>
+              <div style="color:var(--accent);font-size:12px;font-weight:700;margin-top:4px">↑ 0.2 this quarter</div>
+            </div>
+            <div style="text-align:center;padding:20px;background:#f8f9fc;border-radius:12px">
+              <div style="font-size:36px;font-weight:800;color:var(--accent)">94%</div>
+              <div style="color:var(--text-light);font-size:14px">On-Time Delivery</div>
+              <div style="color:var(--accent);font-size:12px;font-weight:700;margin-top:4px">↑ 2% this month</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../data/restaurants.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('adminTime').textContent = new Date().toLocaleString();
+      // Populate restaurants table
+      const tbody = document.getElementById('restTableBody');
+      if (tbody) {
+        tbody.innerHTML = RESTAURANTS.map(r => `
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">${r.emoji}</span><strong>${r.name}</strong></div></td>
+            <td style="color:var(--text-light)">${r.cuisine.join(', ')}</td>
+            <td>⭐ ${r.rating} (${r.reviews.toLocaleString()})</td>
+            <td>${Math.floor(Math.random()*500+100)}</td>
+            <td style="color:var(--accent);font-weight:700">₹${(Math.floor(Math.random()*50+20)*1000).toLocaleString()}</td>
+            <td><span class="badge badge-green">Active</span></td>
+            <td>
+              <button class="action-icon" style="background:#e8f4fd" onclick="Toast.show('${r.name} details','info')">👁️</button>
+              <button class="action-icon" style="background:#ffeaea" onclick="Toast.show('${r.name} suspended','info')">⚡</button>
+            </td>
+          </tr>`).join('');
+      }
+    });
+
+    function showPanel(name, el) {
+      ['dashboard','users','restaurants','orders','riders','analytics'].forEach(p => {
+        const panel = document.getElementById('panel-'+p);
+        if (panel) panel.style.display = p === name ? 'block' : 'none';
+      });
+      document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+      const titles = {dashboard:'📊 Dashboard Overview',users:'👥 Users Management',restaurants:'🏪 Restaurants',orders:'📦 All Orders',riders:'🛵 Delivery Partners',analytics:'📈 Analytics'};
+      document.getElementById('adminPanelTitle').textContent = titles[name];
+    }
+  </script>
+</body>
+</html>

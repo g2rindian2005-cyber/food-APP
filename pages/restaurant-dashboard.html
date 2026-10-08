@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Restaurant Dashboard — FoodDash</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { background: #f0f2f5; font-family: 'Poppins', sans-serif; }
+    .dash-layout { display: flex; min-height: 100vh; }
+    /* Sidebar */
+    .dash-sidebar { width: 240px; background: var(--dark); color: white; padding: 0; flex-shrink: 0; position: fixed; height: 100vh; overflow-y: auto; }
+    .dash-logo { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .dash-logo h2 { font-size: 18px; font-weight: 800; }
+    .dash-logo p  { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+    .dash-nav { padding: 16px 0; }
+    .dash-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: rgba(255,255,255,0.7); border-left: 3px solid transparent; }
+    .dash-nav-item:hover, .dash-nav-item.active { color: white; background: rgba(255,255,255,0.1); border-left-color: var(--primary); }
+    .dash-nav-item i { width: 18px; }
+    .status-toggle { margin: 16px 20px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 10px; }
+    .status-toggle p { font-size: 12px; opacity: 0.7; margin-bottom: 8px; }
+    .toggle-switch { display: flex; align-items: center; gap: 10px; }
+    .switch { width: 44px; height: 24px; background: #e0e0e0; border-radius: 12px; cursor: pointer; transition: all 0.3s; position: relative; }
+    .switch.on { background: var(--accent); }
+    .switch::after { content: ''; width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: all 0.3s; }
+    .switch.on::after { left: 23px; }
+    .switch-label { font-size: 13px; font-weight: 600; }
+    /* Main */
+    .dash-main { margin-left: 240px; flex: 1; padding: 24px; }
+    .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .dash-header h1 { font-size: 24px; font-weight: 800; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .stat-card-icon { font-size: 32px; margin-bottom: 10px; }
+    .stat-card-val { font-size: 26px; font-weight: 800; color: var(--dark); }
+    .stat-card-label { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+    .stat-card-change { font-size: 12px; margin-top: 6px; font-weight: 600; }
+    .up { color: var(--accent); }
+    .down { color: var(--primary); }
+    /* Orders Table */
+    .panel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; }
+    .panel-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+    .orders-table { width: 100%; border-collapse: collapse; }
+    .orders-table th { text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-light); padding: 0 12px 12px; border-bottom: 2px solid var(--border); }
+    .orders-table td { padding: 14px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .orders-table tr:last-child td { border-bottom: none; }
+    .orders-table tr:hover td { background: #f8f9fc; }
+    .action-btn-sm { padding: 6px 14px; border-radius: 50px; border: none; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-accept { background: #e8f8f0; color: #27ae60; }
+    .btn-accept:hover { background: #27ae60; color: white; }
+    .btn-reject { background: #ffeaea; color: var(--primary); }
+    .btn-reject:hover { background: var(--primary); color: white; }
+    .btn-update { background: #e8f0ff; color: #5c6bc0; }
+    .btn-update:hover { background: #5c6bc0; color: white; }
+    /* Menu Management */
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .menu-manage-card { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; gap: 12px; align-items: center; }
+    .menu-manage-emoji { font-size: 36px; }
+    .menu-manage-info { flex: 1; }
+    .menu-manage-name { font-size: 14px; font-weight: 700; }
+    .menu-manage-price { font-size: 13px; color: var(--primary); font-weight: 700; margin: 2px 0; }
+    .menu-manage-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .available-toggle { font-size: 11px; padding: 4px 10px; border-radius: 50px; border: none; cursor: pointer; font-weight: 700; font-family: inherit; }
+    @media(max-width:768px){ .dash-sidebar{width:0;overflow:hidden;} .dash-main{margin-left:0;} }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <div class="dash-logo">
+        <h2>🍽️ My Restaurant</h2>
+        <p>Partner Dashboard</p>
+      </div>
+      <div class="status-toggle">
+        <p>Restaurant Status</p>
+        <div class="toggle-switch">
+          <div class="switch on" id="restSwitch" onclick="toggleRestStatus(this)"></div>
+          <span class="switch-label" id="restStatusLabel">Open</span>
+        </div>
+      </div>
+      <nav class="dash-nav">
+        <div class="dash-nav-item active" onclick="showSection('orders',this)"><i class="fas fa-list-alt"></i> Live Orders</div>
+        <div class="dash-nav-item" onclick="showSection('menu',this)"><i class="fas fa-utensils"></i> Manage Menu</div>
+        <div class="dash-nav-item" onclick="showSection('stats',this)"><i class="fas fa-chart-bar"></i> Analytics</div>
+        <div class="dash-nav-item" onclick="showSection('profile',this)"><i class="fas fa-store"></i> Profile</div>
+        <div class="dash-nav-item" onclick="window.location.href='../index.html'"><i class="fas fa-home"></i> View Site</div>
+        <div class="dash-nav-item" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
+      </nav>
+    </aside>
+
+    <main class="dash-main">
+      <div class="dash-header">
+        <h1 id="sectionTitle">🔴 Live Orders</h1>
+        <div style="display:flex;gap:10px">
+          <span style="font-size:13px;color:var(--text-light)">Last updated: <span id="lastUpdated"></span></span>
+          <button class="btn-primary" onclick="refreshOrders()" style="padding:8px 18px;font-size:13px">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card-icon">📦</div><div class="stat-card-val" id="todayOrders">12</div><div class="stat-card-label">Today's Orders</div><div class="stat-card-change up">↑ 3 from yesterday</div></div>
+        <div class="stat-card"><div class="stat-card-icon">💰</div><div class="stat-card-val" id="todayRevenue">₹4,280</div><div class="stat-card-label">Today's Revenue</div><div class="stat-card-change up">↑ 12% this week</div></div>
+        <div class="stat-card"><div class="stat-card-icon">⭐</div><div class="stat-card-val">4.8</div><div class="stat-card-label">Avg Rating</div><div class="stat-card-change up">↑ 0.1 this month</div></div>
+        <div class="stat-card"><div class="stat-card-icon">⏱️</div><div class="stat-card-val">32m</div><div class="stat-card-label">Avg Prep Time</div><div class="stat-card-change down">↑ 2m today</div></div>
+      </div>
+
+      <!-- Orders Section -->
+      <div id="section-orders">
+        <div class="panel">
+          <div class="panel-title">
+            Incoming Orders
+            <span style="background:#fff8e1;color:#f39c12;font-size:12px;padding:4px 12px;border-radius:50px;font-weight:700" id="pendingCount">3 Pending</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="orders-table">
+              <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="restOrdersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu Section -->
+      <div id="section-menu" style="display:none">
+        <div class="panel">
+          <div class="panel-title">
+            Menu Items
+            <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="Toast.show('Add item feature coming soon!','info')">+ Add Item</button>
+          </div>
+          <div class="menu-grid" id="menuManageGrid"></div>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div id="section-stats" style="display:none">
+        <div class="panel">
+          <div class="panel-title">📊 Weekly Analytics</div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:flex-end;height:180px;padding:0 20px">
+            ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i) => {
+              const h = [40,55,35,70,85,100,60][i];
+              return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="background:linear-gradient(180deg,var(--primary),var(--secondary));width:100%;height:${h}%;border-radius:8px 8px 0 0;"></div>
+                <span style="font-size:11px;color:var(--text-light)">${d}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div id="section-profile" style="display:none">
+        <div class="panel">
+          <div class="panel-title">🏪 Restaurant Profile</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group"><label>Restaurant Name</label><input type="text" value="My Restaurant" class="form-control"/></div>
+            <div class="form-group"><label>Cuisine Type</label><input type="text" value="Multi-cuisine"/></div>
+            <div class="form-group"><label>Opening Time</label><input type="time" value="09:00"/></div>
+            <div class="form-group"><label>Closing Time</label><input type="time" value="23:00"/></div>
+            <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea rows="3">Delicious food made with love...</textarea></div>
+          </div>
+          <button class="btn-primary" onclick="Toast.show('Profile updated!','success')">Save Changes</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../data/restaurants.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const MOCK_ORDERS = [
+      { id: 'FD001', customer: 'Amit Kumar',    items: 'Margherita ×2, Garlic Bread', amount: 697, time: '2 min ago',  status: 'pending' },
+      { id: 'FD002', customer: 'Priya Sharma',  items: 'BBQ Chicken ×1, Tiramisu ×1', amount: 598, time: '5 min ago',  status: 'pending' },
+      { id: 'FD003', customer: 'Rohan Verma',   items: 'Pepperoni Blast ×1',          amount: 399, time: '8 min ago',  status: 'pending' },
+      { id: 'FD004', customer: 'Sneha Patel',   items: 'Farmhouse ×2',                amount: 698, time: '15 min ago', status: 'preparing' },
+      { id: 'FD005', customer: 'Karan Mehta',   items: 'Margherita ×1, Cola ×2',      amount: 447, time: '22 min ago', status: 'ready' }
+    ];
+
+    let orders = [...MOCK_ORDERS];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderOrders();
+      renderMenuManage();
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+    });
+
+    function renderOrders() {
+      const tbody = document.getElementById('restOrdersBody');
+      const statusMap = { pending:'badge-yellow', preparing:'badge-blue', ready:'badge-green', cancelled:'badge-red' };
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td><strong>#${o.id}</strong></td>
+          <td>${o.customer}</td>
+          <td style="max-width:180px;font-size:12px">${o.items}</td>
+          <td><strong>₹${o.amount}</strong></td>
+          <td style="color:var(--text-light)">${o.time}</td>
+          <td><span class="badge ${statusMap[o.status]||'badge-yellow'}">${o.status}</span></td>
+          <td>
+            <div style="display:flex;gap:6px">
+              ${o.status === 'pending' ? `
+                <button class="action-btn-sm btn-accept" onclick="updateOrder('${o.id}','preparing')">Accept</button>
+                <button class="action-btn-sm btn-reject" onclick="updateOrder('${o.id}','cancelled')">Reject</button>
+              ` : o.status === 'preparing' ? `
+                <button class="action-btn-sm btn-update" onclick="updateOrder('${o.id}','ready')">Mark Ready</button>
+              ` : o.status === 'ready' ? `
+                <button class="action-btn-sm btn-accept" onclick="updateOrder('${o.id}','picked')">Picked Up</button>
+              ` : `<span style="color:var(--text-light);font-size:12px">—</span>`}
+            </div>
+          </td>
+        </tr>`).join('');
+      const pending = orders.filter(o => o.status === 'pending').length;
+      document.getElementById('pendingCount').textContent = pending + ' Pending';
+    }
+
+    function updateOrder(id, newStatus) {
+      const o = orders.find(x => x.id === id);
+      if (o) { o.status = newStatus; renderOrders(); Toast.show(`Order #${id} updated to ${newStatus}`, 'success'); }
+    }
+
+    function renderMenuManage() {
+      const rest  = RESTAURANTS[0];
+      const grid  = document.getElementById('menuManageGrid');
+      grid.innerHTML = rest.menu.map(item => `
+        <div class="menu-manage-card">
+          <div class="menu-manage-emoji">${item.emoji}</div>
+          <div class="menu-manage-info">
+            <div class="menu-manage-name">${item.name}</div>
+            <div class="menu-manage-price">₹${item.price}</div>
+            <div class="menu-manage-actions">
+              <button class="available-toggle" style="background:#e8f8f0;color:#27ae60" onclick="Toast.show('Item updated!','success')">✅ Available</button>
+              <button class="available-toggle" style="background:#f8f9fc;color:var(--text-light)" onclick="Toast.show('Edit feature coming soon!','info')">✏️ Edit</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function showSection(name, el) {
+      ['orders','menu','stats','profile'].forEach(s => {
+        document.getElementById('section-'+s).style.display = s === name ? 'block' : 'none';
+      });
+      document.querySelectorAll('.dash-nav-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+      const titles = { orders:'🔴 Live Orders', menu:'🍽️ Manage Menu', stats:'📊 Analytics', profile:'🏪 Profile' };
+      document.getElementById('sectionTitle').textContent = titles[name];
+    }
+
+    function toggleRestStatus(el) {
+      el.classList.toggle('on');
+      const isOpen = el.classList.contains('on');
+      document.getElementById('restStatusLabel').textContent = isOpen ? 'Open' : 'Closed';
+      Toast.show(isOpen ? 'Restaurant is now Open' : 'Restaurant is now Closed', isOpen ? 'success' : 'info');
+    }
+
+    function refreshOrders() {
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+      Toast.show('Orders refreshed!', 'success');
+    }
+  </script>
+</body>
+</html>

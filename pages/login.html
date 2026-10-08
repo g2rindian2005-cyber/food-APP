@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — FoodDash</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fff5f5 0%, #fff8e8 100%); padding: 20px; }
+    .auth-container { width: 100%; max-width: 460px; }
+    .auth-logo { text-align: center; margin-bottom: 28px; }
+    .auth-logo-icon { font-size: 48px; }
+    .auth-logo-name { font-size: 28px; font-weight: 800; background: linear-gradient(135deg,#ff4757,#ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .auth-card { background: white; border-radius: 24px; padding: 36px; box-shadow: 0 20px 60px rgba(255,71,87,0.12); }
+    .auth-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 28px; gap: 4px; }
+    .auth-tab { flex: 1; background: none; border: none; padding: 12px; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text-light); cursor: pointer; transition: all 0.3s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+    .input-icon { position: relative; }
+    .input-icon i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 15px; }
+    .input-icon input { padding-left: 40px !important; }
+    .input-icon .toggle-pwd { left: auto; right: 14px; cursor: pointer; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-light); font-size: 13px; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .social-auth { display: flex; gap: 12px; }
+    .social-btn { flex: 1; background: white; border: 2px solid var(--border); padding: 11px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .social-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+    .auth-btn { width: 100%; margin-top: 8px; justify-content: center; }
+    .role-select { display: flex; gap: 10px; margin-bottom: 20px; }
+    .role-btn { flex: 1; background: #f8f9fc; border: 2px solid var(--border); padding: 10px; border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; }
+    .role-btn.active { border-color: var(--primary); background: #fff5f5; color: var(--primary); }
+    .forgot-link { text-align: right; margin-top: -12px; margin-bottom: 16px; }
+    .forgot-link a { font-size: 12px; color: var(--primary); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🍔</div>
+      <div class="auth-logo-name">FoodDash</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- LOGIN -->
+      <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+        <div class="role-select">
+          <button type="button" class="role-btn active" onclick="setRole('customer',this)">👤 Customer</button>
+          <button type="button" class="role-btn" onclick="setRole('restaurant',this)">🍽️ Restaurant</button>
+          <button type="button" class="role-btn" onclick="setRole('delivery',this)">🛵 Delivery</button>
+          <button type="button" class="role-btn" onclick="setRole('admin',this)">⚙️ Admin</button>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="loginEmail" placeholder="you@example.com" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="loginPwd" placeholder="Enter your password" required/>
+            <i class="fas fa-eye toggle-pwd" onclick="togglePwd('loginPwd',this)"></i>
+          </div>
+        </div>
+        <div class="forgot-link"><a href="#">Forgot password?</a></div>
+        <button type="submit" class="btn-primary auth-btn">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+        <div class="divider">or continue with</div>
+        <div class="social-auth">
+          <button type="button" class="social-btn" onclick="socialLogin('Google')"><i class="fab fa-google" style="color:#ea4335"></i> Google</button>
+          <button type="button" class="social-btn" onclick="socialLogin('Facebook')"><i class="fab fa-facebook" style="color:#1877f2"></i> Facebook</button>
+        </div>
+      </form>
+
+      <!-- REGISTER -->
+      <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <div class="input-icon">
+            <i class="fas fa-user"></i>
+            <input type="text" id="regName" placeholder="John Doe" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="regEmail" placeholder="you@example.com" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <div class="input-icon">
+            <i class="fas fa-phone"></i>
+            <input type="tel" id="regPhone" placeholder="+91 98765 43210" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="regPwd" placeholder="Min 8 characters" minlength="8" required/>
+            <i class="fas fa-eye toggle-pwd" onclick="togglePwd('regPwd',this)"></i>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary auth-btn">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+        <div class="divider">or continue with</div>
+        <div class="social-auth">
+          <button type="button" class="social-btn" onclick="socialLogin('Google')"><i class="fab fa-google" style="color:#ea4335"></i> Google</button>
+          <button type="button" class="social-btn" onclick="socialLogin('Facebook')"><i class="fab fa-facebook" style="color:#1877f2"></i> Facebook</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../data/restaurants.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    let currentRole = 'customer';
+
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register')));
+      document.getElementById('loginForm').classList.toggle('active', tab==='login');
+      document.getElementById('registerForm').classList.toggle('active', tab==='register');
+    }
+
+    function setRole(role, btn) {
+      currentRole = role;
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function togglePwd(id, icon) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
+      else { input.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const redirects = { customer: '../index.html', restaurant: 'restaurant-dashboard.html', delivery: 'delivery-dashboard.html', admin: 'admin.html' };
+      Auth.setUser({ name: email.split('@')[0], email, role: currentRole });
+      Toast.show(`Welcome back! Redirecting...`, 'success');
+      setTimeout(() => window.location.href = redirects[currentRole] || '../index.html', 1000);
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const name  = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const phone = document.getElementById('regPhone').value;
+      Auth.setUser({ name, email, phone, role: 'customer' });
+      Toast.show(`Welcome to FoodDash, ${name}! 🎉`, 'success');
+      setTimeout(() => window.location.href = '../index.html', 1000);
+    }
+
+    function socialLogin(provider) {
+      Auth.setUser({ name: `${provider} User`, email: `user@${provider.toLowerCase()}.com`, role: 'customer' });
+      Toast.show(`Signed in with ${provider}!`, 'success');
+      setTimeout(() => window.location.href = '../index.html', 1000);
+    }
+  </script>
+</body>
+</html>

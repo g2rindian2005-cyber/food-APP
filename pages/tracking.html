@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Order — FoodDash</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { padding-top: 70px; background: #f8f9fc; }
+    .tracking-layout { max-width: 880px; margin: 0 auto; padding: 28px 24px; }
+    .tracking-card { background: white; border-radius: 24px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+    /* Header */
+    .tracking-header { background: linear-gradient(135deg, var(--primary), #ff6b35); color: white; padding: 28px 32px; }
+    .tracking-header h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .tracking-header p { opacity: 0.85; font-size: 14px; }
+    .order-id-badge { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 50px; font-size: 13px; font-weight: 700; display: inline-block; margin-top: 10px; }
+    /* Status Bar */
+    .status-body { padding: 32px; }
+    .status-steps { display: flex; align-items: flex-start; justify-content: space-between; position: relative; margin-bottom: 40px; }
+    .status-steps::before { content: ''; position: absolute; top: 28px; left: 10%; right: 10%; height: 4px; background: var(--border); z-index: 0; border-radius: 2px; }
+    .status-progress { position: absolute; top: 28px; left: 10%; height: 4px; background: linear-gradient(135deg, var(--primary), var(--secondary)); z-index: 1; border-radius: 2px; transition: width 1.2s ease; }
+    .status-step { display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 2; flex: 1; }
+    .step-circle { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all 0.5s ease; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .step-circle.done { background: linear-gradient(135deg, var(--accent), #27ae60); animation: pop 0.4s ease; }
+    .step-circle.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); animation: pulse-ring 1.5s infinite; }
+    .step-label { font-size: 12px; font-weight: 600; color: var(--text-light); text-align: center; max-width: 80px; }
+    .step-label.done, .step-label.active { color: var(--dark); }
+    .step-time { font-size: 11px; color: var(--text-light); text-align: center; }
+    /* Live Info */
+    .live-info { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .live-card { background: #f8f9fc; border-radius: var(--radius-sm); padding: 16px; }
+    .live-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 6px; }
+    .live-card-value { font-size: 18px; font-weight: 800; color: var(--dark); }
+    .live-card-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .eta-countdown { color: var(--primary); font-size: 22px; font-weight: 800; }
+    /* Map Simulation */
+    .map-container { border-radius: var(--radius); overflow: hidden; height: 220px; background: linear-gradient(135deg, #e8f5e9, #e3f2fd); display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 24px; }
+    .map-placeholder { text-align: center; }
+    .map-placeholder .map-emoji { font-size: 48px; }
+    .map-placeholder p { font-size: 14px; color: var(--text-light); margin-top: 8px; }
+    .map-rider { position: absolute; font-size: 32px; transition: all 2s ease; }
+    /* Delivery Partner */
+    .partner-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: #f8f9fc; border-radius: var(--radius-sm); }
+    .partner-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .partner-info h4 { font-size: 15px; font-weight: 700; }
+    .partner-info p  { font-size: 13px; color: var(--text-light); }
+    .partner-actions { margin-left: auto; display: flex; gap: 10px; }
+    .partner-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); background: white; font-size: 18px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+    .partner-btn:hover { border-color: var(--primary); transform: scale(1.1); }
+    /* Order Items */
+    .order-items-list { padding: 24px 32px; border-top: 1px solid var(--border); }
+    .order-items-list h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .order-item-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-emoji { font-size: 28px; }
+    .order-item-name  { flex: 1; font-size: 14px; font-weight: 600; }
+    .order-item-qty   { font-size: 13px; color: var(--text-light); }
+    .order-item-price { font-size: 14px; font-weight: 700; }
+    /* Rating Modal */
+    .rate-section { padding: 24px 32px; border-top: 1px solid var(--border); display: none; }
+    .rate-section.show { display: block; }
+    .star-row { display: flex; gap: 8px; margin: 12px 0; }
+    .star-btn { font-size: 32px; cursor: pointer; transition: transform 0.2s; filter: grayscale(1); }
+    .star-btn.active { filter: none; transform: scale(1.15); }
+    @keyframes pop { 0%{transform:scale(0.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    @keyframes pulse-ring { 0%,100%{box-shadow:0 0 0 0 rgba(255,71,87,0.4)} 50%{box-shadow:0 0 0 10px rgba(255,71,87,0)} }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand" onclick="window.location.href='../index.html'" style="cursor:pointer">
+      <span class="brand-icon">🍔</span><span class="brand-name">FoodDash</span>
+    </div>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="menu.html" class="nav-link">Menu</a>
+      <a href="orders.html" class="nav-link">My Orders</a>
+      <a href="cart.html" class="nav-link cart-link">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </a>
+      <a href="login.html" class="nav-link btn-login" id="authBtn">Login</a>
+    </div>
+  </nav>
+
+  <div class="tracking-layout">
+    <div class="tracking-card">
+      <div class="tracking-header">
+        <h2>🛵 Real-Time Order Tracking</h2>
+        <p>Your food is on its way!</p>
+        <div class="order-id-badge" id="orderIdBadge">Order #FD...</div>
+      </div>
+      <div class="status-body">
+        <!-- Progress Steps -->
+        <div class="status-steps" id="statusSteps">
+          <div class="status-progress" id="statusProgress" style="width:0%"></div>
+          <div class="status-step" id="step-0">
+            <div class="step-circle" id="sc-0">✅</div>
+            <div class="step-label" id="sl-0">Order Placed</div>
+            <div class="step-time" id="st-0"></div>
+          </div>
+          <div class="status-step" id="step-1">
+            <div class="step-circle" id="sc-1">👨‍🍳</div>
+            <div class="step-label" id="sl-1">Confirmed</div>
+            <div class="step-time" id="st-1"></div>
+          </div>
+          <div class="status-step" id="step-2">
+            <div class="step-circle" id="sc-2">🍳</div>
+            <div class="step-label" id="sl-2">Preparing</div>
+            <div class="step-time" id="st-2"></div>
+          </div>
+          <div class="status-step" id="step-3">
+            <div class="step-circle" id="sc-3">📦</div>
+            <div class="step-label" id="sl-3">Packed</div>
+            <div class="step-time" id="st-3"></div>
+          </div>
+          <div class="status-step" id="step-4">
+            <div class="step-circle" id="sc-4">🛵</div>
+            <div class="step-label" id="sl-4">Picked Up</div>
+            <div class="step-time" id="st-4"></div>
+          </div>
+          <div class="status-step" id="step-5">
+            <div class="step-circle" id="sc-5">🏠</div>
+            <div class="step-label" id="sl-5">Delivered</div>
+            <div class="step-time" id="st-5"></div>
+          </div>
+        </div>
+
+        <!-- Live Info Cards -->
+        <div class="live-info">
+          <div class="live-card">
+            <div class="live-card-label">⏱ Estimated Arrival</div>
+            <div class="eta-countdown" id="etaDisplay">--:--</div>
+            <div class="live-card-sub" id="etaSub">Calculating...</div>
+          </div>
+          <div class="live-card">
+            <div class="live-card-label">📍 Current Status</div>
+            <div class="live-card-value" id="statusText">Order Placed</div>
+            <div class="live-card-sub" id="statusSub">Waiting for restaurant</div>
+          </div>
+          <div class="live-card">
+            <div class="live-card-label">🏪 Restaurant</div>
+            <div class="live-card-value" id="restName">-</div>
+            <div class="live-card-sub">Preparing your order</div>
+          </div>
+          <div class="live-card">
+            <div class="live-card-label">💳 Amount</div>
+            <div class="live-card-value" id="orderTotal">₹0</div>
+            <div class="live-card-sub" id="paymentMethod">-</div>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div class="map-container">
+          <div class="map-placeholder">
+            <div class="map-emoji">🗺️</div>
+            <p>Live map tracking active</p>
+          </div>
+          <div class="map-rider" id="mapRider" style="bottom:20%;left:10%">🛵</div>
+        </div>
+
+        <!-- Delivery Partner -->
+        <div class="partner-card">
+          <div class="partner-avatar">👨</div>
+          <div class="partner-info">
+            <h4 id="partnerName">Rahul Kumar</h4>
+            <p>⭐ 4.8 · 1,240 deliveries</p>
+          </div>
+          <div class="partner-actions">
+            <button class="partner-btn" title="Call" onclick="Toast.show('📞 Calling delivery partner...','info')">📞</button>
+            <button class="partner-btn" title="Message" onclick="Toast.show('💬 Feature coming soon!','info')">💬</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="order-items-list">
+        <h3>🧾 Your Order</h3>
+        <div id="orderItemsDisplay"></div>
+      </div>
+
+      <!-- Rating (shown after delivery) -->
+      <div class="rate-section" id="rateSection">
+        <h3>⭐ Rate your experience</h3>
+        <p style="color:var(--text-light);font-size:14px;margin-top:4px">How was your order?</p>
+        <div class="star-row" id="starRow">
+          <span class="star-btn" data-val="1">⭐</span>
+          <span class="star-btn" data-val="2">⭐</span>
+          <span class="star-btn" data-val="3">⭐</span>
+          <span class="star-btn" data-val="4">⭐</span>
+          <span class="star-btn" data-val="5">⭐</span>
+        </div>
+        <textarea style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px;font-family:inherit;font-size:13px;resize:none;outline:none;margin-top:8px" rows="3" placeholder="Write a review (optional)..."></textarea>
+        <button class="btn-primary" style="margin-top:12px" onclick="submitRating()">Submit Rating</button>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <a href="orders.html" style="color:var(--text-light);text-decoration:none;font-size:14px">← View all orders</a>
+    </div>
+  </div>
+
+  <script src="../data/restaurants.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const STEPS = [
+      { text: 'Order Placed',    sub: 'Your order has been received' },
+      { text: 'Confirmed',       sub: 'Restaurant accepted your order' },
+      { text: 'Preparing',       sub: 'Chef is cooking your food' },
+      { text: 'Packed',          sub: 'Order is packed and ready' },
+      { text: 'Picked Up',       sub: 'Rider is on the way to you' },
+      { text: 'Delivered',       sub: 'Enjoy your meal! 🎉' }
+    ];
+    const STEP_DELAYS = [0, 5, 12, 22, 30, 38]; // seconds for demo
+
+    const PARTNERS = ['Rahul Kumar','Arjun Sharma','Deepak Singh','Mohan Das','Vikas Patel'];
+
+    let currentStep  = 0;
+    let orderData    = null;
+    let etaSeconds   = 38;
+    let etaTimer     = null;
+    let stepTimer    = null;
+    let riderPos     = { x: 10, y: 20 };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get('id');
+      const orders  = getOrders();
+      orderData = orderId ? orders.find(o => o.id === orderId) : orders[0];
+
+      if (!orderData) {
+        document.querySelector('.tracking-layout').innerHTML = `
+          <div class="tracking-card" style="padding:60px;text-align:center">
+            <div style="font-size:64px">📭</div>
+            <h3 style="margin:16px 0 8px">No order found</h3>
+            <p style="color:var(--text-light)">Place an order first!</p>
+            <a href="menu.html" class="btn-primary" style="display:inline-flex;margin-top:20px;text-decoration:none">Browse Menu</a>
+          </div>`;
+        return;
+      }
+
+      populateOrder();
+      startTracking();
+      initStarRating();
+    });
+
+    function populateOrder() {
+      document.getElementById('orderIdBadge').textContent = 'Order #' + orderData.id;
+      document.getElementById('restName').textContent    = orderData.restaurant || '-';
+      document.getElementById('orderTotal').textContent  = '₹' + orderData.total;
+      document.getElementById('paymentMethod').textContent = paymentLabel(orderData.payment);
+      document.getElementById('partnerName').textContent = PARTNERS[Math.floor(Math.random() * PARTNERS.length)];
+      document.getElementById('orderItemsDisplay').innerHTML = (orderData.items || []).map(i => `
+        <div class="order-item-row">
+          <span class="order-item-emoji">${i.emoji}</span>
+          <span class="order-item-name">${i.name}</span>
+          <span class="order-item-qty">×${i.qty}</span>
+          <span class="order-item-price">₹${i.price * i.qty}</span>
+        </div>`).join('');
+    }
+
+    function paymentLabel(p) {
+      const m = { upi:'UPI Payment', card:'Card Payment', nb:'Net Banking', cod:'Cash on Delivery' };
+      return m[p] || p;
+    }
+
+    function startTracking() {
+      updateStep(0);
+      // ETA countdown
+      etaTimer = setInterval(() => {
+        if (etaSeconds > 0) {
+          etaSeconds--;
+          const m = Math.floor(etaSeconds / 60);
+          const s = etaSeconds % 60;
+          document.getElementById('etaDisplay').textContent = `${m}:${String(s).padStart(2,'0')}`;
+          document.getElementById('etaSub').textContent = etaSeconds > 0 ? `~${Math.ceil(etaSeconds/60)} min remaining` : 'Arriving now!';
+          animateRider();
+        } else {
+          clearInterval(etaTimer);
+        }
+      }, 1000);
+
+      // Step progression
+      let stepIdx = 1;
+      stepTimer = setInterval(() => {
+        if (stepIdx < STEPS.length) {
+          updateStep(stepIdx);
+          stepIdx++;
+        } else {
+          clearInterval(stepTimer);
+          document.getElementById('rateSection').classList.add('show');
+          Toast.show('🎉 Order delivered! Enjoy your meal!', 'success', 5000);
+        }
+      }, 6000); // advance every 6s for demo
+    }
+
+    function updateStep(idx) {
+      currentStep = idx;
+      const progressPct = [0, 20, 40, 60, 80, 100][idx];
+      document.getElementById('statusProgress').style.width = progressPct + '%';
+      document.getElementById('statusText').textContent = STEPS[idx].text;
+      document.getElementById('statusSub').textContent  = STEPS[idx].sub;
+
+      for (let i = 0; i < STEPS.length; i++) {
+        const circle = document.getElementById(`sc-${i}`);
+        const label  = document.getElementById(`sl-${i}`);
+        const time   = document.getElementById(`st-${i}`);
+        circle.className = 'step-circle ' + (i < idx ? 'done' : i === idx ? 'active' : '');
+        label.className  = 'step-label '  + (i <= idx ? (i < idx ? 'done' : 'active') : '');
+        if (i <= idx) time.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      }
+    }
+
+    function animateRider() {
+      const rider = document.getElementById('mapRider');
+      riderPos.x = Math.min(riderPos.x + (Math.random() * 3 + 1), 80);
+      riderPos.y = 20 + Math.sin(riderPos.x * 0.1) * 20;
+      rider.style.left = riderPos.x + '%';
+      rider.style.bottom = riderPos.y + '%';
+    }
+
+    function initStarRating() {
+      let selected = 0;
+      document.querySelectorAll('.star-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selected = parseInt(btn.dataset.val);
+          document.querySelectorAll('.star-btn').forEach((b,i) => b.classList.toggle('active', i < selected));
+        });
+      });
+    }
+
+    function submitRating() {
+      Toast.show('Thanks for your rating! ⭐', 'success');
+      document.getElementById('rateSection').innerHTML = '<p style="text-align:center;color:#27ae60;font-weight:700;padding:20px">✅ Rating submitted! Thank you!</p>';
+    }
+  </script>
+</body>
+</html>

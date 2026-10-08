@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FoodDash — Fast Food Delivery</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/home.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">🍔</span>
+      <span class="brand-name">FoodDash</span>
+    </div>
+    <div class="nav-search">
+      <input type="text" id="globalSearch" placeholder="Search restaurants or food..." autocomplete="off"/>
+      <button class="search-btn"><i class="fas fa-search"></i></button>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="pages/menu.html" class="nav-link">Menu</a>
+      <a href="pages/orders.html" class="nav-link">My Orders</a>
+      <a href="pages/cart.html" class="nav-link cart-link">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </a>
+      <a href="pages/login.html" class="nav-link btn-login" id="authBtn">Login</a>
+    </div>
+    <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i></button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Home</a>
+    <a href="pages/menu.html">Menu</a>
+    <a href="pages/orders.html">My Orders</a>
+    <a href="pages/cart.html">Cart <span id="mobileCartBadge">0</span></a>
+    <a href="pages/login.html">Login</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge"><span>🚀</span> Fast Delivery in 30 mins</div>
+      <h1 class="hero-title">Hungry? <br/><span class="gradient-text">We've Got You!</span></h1>
+      <p class="hero-sub">Order from 200+ restaurants near you. Real-time tracking, cashless payment, fresh food guaranteed.</p>
+      <div class="hero-search">
+        <i class="fas fa-map-marker-alt"></i>
+        <input type="text" id="heroSearch" placeholder="Enter your delivery address..."/>
+        <button class="btn-order" onclick="window.location.href='pages/menu.html'">Find Food</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">200+</span><span class="stat-label">Restaurants</span></div>
+        <div class="stat"><span class="stat-num">30min</span><span class="stat-label">Avg Delivery</span></div>
+        <div class="stat"><span class="stat-num">50k+</span><span class="stat-label">Happy Users</span></div>
+        <div class="stat"><span class="stat-num">4.9★</span><span class="stat-label">Rating</span></div>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="hero-photo-collage">
+        <div class="collage-main floating" style="--delay:0s">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=420&q=85" alt="Pizza" loading="eager"/>
+        </div>
+        <div class="collage-grid">
+          <div class="collage-small floating" style="--delay:0.4s">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80" alt="Burger" loading="eager"/>
+          </div>
+          <div class="collage-small floating" style="--delay:0.8s">
+            <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=200&q=80" alt="Sushi" loading="eager"/>
+          </div>
+          <div class="collage-small floating" style="--delay:1.2s">
+            <img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&q=80" alt="Biryani" loading="eager"/>
+          </div>
+          <div class="collage-small floating" style="--delay:1.6s">
+            <img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=200&q=80" alt="Tacos" loading="eager"/>
+          </div>
+        </div>
+        <div class="collage-float-badge floating" style="--delay:0.2s">
+          <span class="badge-icon">⚡</span>
+          <div>
+            <div class="badge-title">Fast Delivery</div>
+            <div class="badge-sub">Avg 28 min</div>
+          </div>
+        </div>
+        <div class="collage-float-rating floating" style="--delay:1s">
+          <span>⭐ 4.9</span>
+          <span class="rating-label">Top Rated</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="section categories-section">
+    <h2 class="section-title">What are you craving?</h2>
+    <div class="categories-grid" id="categoriesGrid"></div>
+  </section>
+
+  <!-- FEATURED RESTAURANTS -->
+  <section class="section restaurants-section">
+    <div class="section-header">
+      <h2 class="section-title">Top Restaurants Near You</h2>
+      <a href="pages/menu.html" class="see-all">See All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="restaurants-grid" id="restaurantsGrid"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section how-section">
+    <h2 class="section-title">How FoodDash Works</h2>
+    <div class="steps-grid">
+      <div class="step"><div class="step-icon">📍</div><h3>Choose Location</h3><p>Enter your delivery address to see nearby restaurants.</p></div>
+      <div class="step"><div class="step-icon">🍽️</div><h3>Pick Your Food</h3><p>Browse menus, filter by cuisine, and add to cart.</p></div>
+      <div class="step"><div class="step-icon">💳</div><h3>Pay Securely</h3><p>Multiple payment options — cards, UPI, wallets, COD.</p></div>
+      <div class="step"><div class="step-icon">🛵</div><h3>Track in Real-Time</h3><p>Watch your order move from kitchen to your door live.</p></div>
+    </div>
+  </section>
+
+  <!-- POPULAR DISHES -->
+  <section class="section dishes-section">
+    <div class="section-header">
+      <h2 class="section-title">Popular Dishes</h2>
+      <a href="pages/menu.html" class="see-all">See All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="dishes-grid" id="dishesGrid"></div>
+  </section>
+
+  <!-- PROMO BANNER -->
+  <section class="promo-banner">
+    <div class="promo-content">
+      <h2>🎉 Get 40% OFF on your first order!</h2>
+      <p>Use code <strong>FOODDASH40</strong> at checkout</p>
+      <button class="btn-promo" onclick="window.location.href='pages/menu.html'">Order Now</button>
+    </div>
+  </section>
+
+  <!-- APP DOWNLOAD -->
+  <section class="section app-section">
+    <div class="app-content">
+      <h2>Get the FoodDash App</h2>
+      <p>Order faster, track smarter. Available on iOS & Android.</p>
+      <div class="app-buttons">
+        <button class="app-btn"><i class="fab fa-apple"></i> App Store</button>
+        <button class="app-btn"><i class="fab fa-google-play"></i> Google Play</button>
+      </div>
+    </div>
+    <div class="app-phones">📱</div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand-logo">🍔 FoodDash</div>
+        <p>Delivering happiness to your doorstep since 2024.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-facebook"></i></a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="#">About Us</a><a href="#">Careers</a><a href="#">Blog</a><a href="#">Press</a>
+      </div>
+      <div class="footer-links">
+        <h4>For Partners</h4>
+        <a href="pages/restaurant-login.html">Restaurant Login</a>
+        <a href="pages/delivery-login.html">Become a Rider</a>
+        <a href="pages/admin.html">Admin Panel</a>
+      </div>
+      <div class="footer-links">
+        <h4>Support</h4>
+        <a href="#">Help Center</a><a href="#">Contact Us</a><a href="#">Privacy Policy</a><a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 FoodDash. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="data/restaurants.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>
