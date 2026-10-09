@@ -83,14 +83,24 @@ jobs:
       - name: 🔑 Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          # Use printf to preserve exact key formatting (echo can corrupt multi-line keys)
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          # Add EC2 host to known_hosts to avoid interactive prompt
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          # Verify key file is not empty
+          if [ ! -s ~/.ssh/id_rsa ]; then
+            echo "❌ EC2_SSH_KEY secret is empty!"
+            exit 1
+          fi
+          # Add EC2 host to known_hosts (skip strict checking as fallback)
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "✅ SSH key setup complete"
 
       - name: 🚀 Deploy to EC2 via SSH
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+          ssh -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o PasswordAuthentication=no \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
             set -e  # Exit on any error
 
             echo "──────────────────────────────────────"
