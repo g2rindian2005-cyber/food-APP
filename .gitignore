@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────
+# food-APP .gitignore
+# ─────────────────────────────────────────
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor & IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Dependency directories (if ever added)
+node_modules/
+bower_components/
+
+# Build output (if ever added)
+dist/
+build/
+out/
+
+# Environment files — NEVER commit secrets
+.env
+.env.local
+.env.production
+.env.staging
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Temp files
+*.tmp
+*.temp
+.cache/
+
+# Package lock files (optional — remove these lines if you want to track them)
+# package-lock.json
+# yarn.lock
+
+# Test coverage (if ever added)
+coverage/
+.nyc_output/

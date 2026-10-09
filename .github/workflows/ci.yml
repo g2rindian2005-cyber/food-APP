@@ -1,0 +1,172 @@
+name: 🔍 PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Validate HTML, CSS, JS files
+  # ─────────────────────────────────────────
+  validate:
+    name: ✅ Validate Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check all required files exist
+        run: |
+          echo "Checking required project files..."
+          files=(
+            "index.html"
+            "css/style.css"
+            "css/home.css"
+            "js/app.js"
+            "js/home.js"
+            "data/restaurants.js"
+            "pages/menu.html"
+            "pages/login.html"
+            "pages/cart.html"
+            "pages/orders.html"
+            "pages/tracking.html"
+            "pages/admin.html"
+            "pages/statistics.html"
+            "pages/restaurant-dashboard.html"
+            "pages/delivery-dashboard.html"
+          )
+          MISSING=0
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "  ✅ $file"
+            else
+              echo "  ❌ MISSING: $file"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+          if [ $MISSING -gt 0 ]; then
+            echo ""
+            echo "❌ $MISSING required file(s) are missing!"
+            exit 1
+          fi
+          echo ""
+          echo "✅ All required files present!"
+
+      - name: 🏷️  Validate HTML structure
+        run: |
+          echo "Validating HTML files..."
+          ERRORS=0
+          for html_file in $(find . -name "*.html" -not -path "./.git/*"); do
+            # Check file is not empty
+            if [ ! -s "$html_file" ]; then
+              echo "  ❌ Empty: $html_file"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+            # Check DOCTYPE declaration
+            if ! grep -qi "<!DOCTYPE html>" "$html_file"; then
+              echo "  ⚠️  Missing DOCTYPE: $html_file"
+            fi
+            # Check <html> tag
+            if ! grep -qi "<html" "$html_file"; then
+              echo "  ❌ Missing <html> tag: $html_file"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+            # Check <head> tag
+            if ! grep -qi "<head" "$html_file"; then
+              echo "  ⚠️  Missing <head>: $html_file"
+            fi
+            # Check <body> tag
+            if ! grep -qi "<body" "$html_file"; then
+              echo "  ❌ Missing <body> tag: $html_file"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+            echo "  ✅ $html_file"
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ $ERRORS HTML file(s) have critical errors!"
+            exit 1
+          fi
+          echo ""
+          echo "✅ All HTML files look good!"
+
+      - name: 🎨 Check CSS files are non-empty
+        run: |
+          echo "Checking CSS files..."
+          for css_file in $(find . -name "*.css" -not -path "./.git/*"); do
+            if [ ! -s "$css_file" ]; then
+              echo "  ❌ Empty CSS: $css_file"
+              exit 1
+            fi
+            echo "  ✅ $css_file"
+          done
+
+      - name: ⚡ Check JS files are non-empty
+        run: |
+          echo "Checking JS files..."
+          for js_file in $(find . -name "*.js" -not -path "./.git/*"); do
+            if [ ! -s "$js_file" ]; then
+              echo "  ❌ Empty JS: $js_file"
+              exit 1
+            fi
+            echo "  ✅ $js_file"
+          done
+
+      - name: 🔗 Check for broken local links in HTML
+        run: |
+          echo "Checking internal file references..."
+          BROKEN=0
+          for html_file in $(find . -name "*.html" -not -path "./.git/*"); do
+            # Extract local src/href references (not http/https, not #anchors)
+            refs=$(grep -oP '(?:src|href)=["'"'"'][^"'"'"'#http][^"'"'"']*["'"'"']' "$html_file" \
+                   | grep -oP '["'"'"'][^"'"'"']+["'"'"']' \
+                   | tr -d '"'"'"' \
+                   | grep -v "^http" \
+                   | grep -v "^#" || true)
+            for ref in $refs; do
+              # Resolve path relative to the HTML file's directory
+              dir=$(dirname "$html_file")
+              full_path="$dir/$ref"
+              # Normalize double slashes
+              full_path=$(echo "$full_path" | sed 's|//|/|g')
+              if [ ! -f "$full_path" ] && [ ! -d "$full_path" ]; then
+                echo "  ⚠️  Possible broken ref in $html_file → $ref"
+              fi
+            done
+          done
+          echo "✅ Link check complete"
+
+  # ─────────────────────────────────────────
+  # JOB 2: Project size & diff summary
+  # ─────────────────────────────────────────
+  summary:
+    name: 📊 PR Summary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for diff
+
+      - name: 📊 Show changed files
+        run: |
+          echo "──────────────────────────────────────"
+          echo "📝 Files changed in this PR:"
+          echo "──────────────────────────────────────"
+          git diff --name-status origin/main...HEAD || git diff --name-status HEAD~1...HEAD
+          echo ""
+          echo "──────────────────────────────────────"
+          echo "📁 Project size breakdown:"
+          echo "──────────────────────────────────────"
+          echo "HTML: $(find . -name '*.html' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}') lines"
+          echo "CSS:  $(find . -name '*.css' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}') lines"
+          echo "JS:   $(find . -name '*.js' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}') lines"
+          echo "Total disk: $(du -sh . --exclude=.git | cut -f1)"
+          echo "──────────────────────────────────────"

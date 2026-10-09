@@ -1,0 +1,156 @@
+name: 🚀 Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+
+env:
+  APP_DIR: /var/www/food-APP   # Path on EC2 where app lives
+  NGINX_SERVICE: nginx
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Validate & lint the static files
+  # ─────────────────────────────────────────
+  validate:
+    name: ✅ Validate HTML & Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check required files exist
+        run: |
+          echo "Checking required project files..."
+          files=("index.html" "css/style.css" "css/home.css" "js/app.js" "js/home.js" "data/restaurants.js")
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "  ✅ $file"
+            else
+              echo "  ❌ MISSING: $file"
+              exit 1
+            fi
+          done
+          echo "All required files found!"
+
+      - name: 🔍 Validate HTML files (basic syntax check)
+        run: |
+          echo "Checking HTML files for basic issues..."
+          # Check all HTML files are non-empty and have basic structure
+          for html_file in $(find . -name "*.html" -not -path "./.git/*"); do
+            if [ ! -s "$html_file" ]; then
+              echo "  ❌ Empty file: $html_file"
+              exit 1
+            fi
+            if ! grep -q "<!DOCTYPE html>" "$html_file"; then
+              echo "  ⚠️  Missing DOCTYPE in: $html_file"
+            else
+              echo "  ✅ $html_file"
+            fi
+          done
+
+      - name: 📊 Show file summary
+        run: |
+          echo "──────────────────────────────"
+          echo "📁 Project File Summary:"
+          echo "──────────────────────────────"
+          echo "HTML files:"
+          find . -name "*.html" -not -path "./.git/*" | wc -l
+          echo "CSS files:"
+          find . -name "*.css" -not -path "./.git/*" | wc -l
+          echo "JS files:"
+          find . -name "*.js" -not -path "./.git/*" | wc -l
+          echo "Total size:"
+          du -sh . --exclude=.git
+          echo "──────────────────────────────"
+
+  # ─────────────────────────────────────────
+  # JOB 2: Deploy to EC2 (runs after validate)
+  # ─────────────────────────────────────────
+  deploy:
+    name: 🚀 Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: validate   # Only deploy if validation passes
+    environment: production  # Requires env protection rules if set
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Add EC2 host to known_hosts to avoid interactive prompt
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 🚀 Deploy to EC2 via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            set -e  # Exit on any error
+
+            echo "──────────────────────────────────────"
+            echo "🚀 Starting FoodDash Deployment"
+            echo "──────────────────────────────────────"
+            echo "⏰ Time: $(date)"
+            echo "📍 Server: $(hostname)"
+
+            # Navigate to app directory
+            cd /var/www/food-APP
+
+            # Pull latest code from GitHub
+            echo ""
+            echo "📥 Pulling latest code from GitHub..."
+            sudo git fetch origin main
+            sudo git reset --hard origin/main
+
+            # Set correct file permissions for Nginx
+            echo ""
+            echo "🔐 Setting file permissions..."
+            sudo chown -R www-data:www-data /var/www/food-APP
+            sudo chmod -R 755 /var/www/food-APP
+
+            # Reload Nginx to serve latest files
+            echo ""
+            echo "♻️  Reloading Nginx..."
+            sudo nginx -t
+            sudo systemctl reload nginx
+
+            # Health check — verify site responds
+            echo ""
+            echo "🏥 Running health check..."
+            sleep 2
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "  ✅ Site is UP — HTTP $HTTP_STATUS"
+            else
+              echo "  ❌ Health check FAILED — HTTP $HTTP_STATUS"
+              exit 1
+            fi
+
+            echo ""
+            echo "──────────────────────────────────────"
+            echo "✅ Deployment Successful!"
+            echo "──────────────────────────────────────"
+          ENDSSH
+
+      - name: 🔔 Notify deployment success
+        if: success()
+        run: |
+          echo "✅ Deployment to EC2 completed successfully!"
+          echo "🌐 App is live at: http://${{ secrets.EC2_HOST }}"
+          echo "📅 Deployed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+
+      - name: 🚨 Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment FAILED!"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "🔍 Check the logs above for details."
